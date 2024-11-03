@@ -15,17 +15,8 @@ const AdminDashboard = () => {
   const { currentUser, isAdmin } = useAuth();
   const navigate = useNavigate();
   
-  // Main View State
-  const [mainView, setMainView] = useState('admin'); // 'admin' or 'user'
-  const [activeView, setActiveView] = useState('discover'); // For user view navigation
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [updateSuccess, setUpdateSuccess] = useState(false);
-
-  // Shared States
-  const [user, setUser] = useState(null);
-  const [profileData, setProfileData] = useState({
+  // Initial states with default values
+  const initialProfileData = {
     firstName: 'User',
     phoneNumber: '',
     age: '25',
@@ -35,7 +26,19 @@ const AdminDashboard = () => {
     gender: '',
     interestedIn: '',
     bio: ''
-  });
+  };
+
+  // Main View State
+  const [mainView, setMainView] = useState('admin');
+  const [activeView, setActiveView] = useState('discover');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  // Shared States
+  const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(initialProfileData);
   const [photoFile, setPhotoFile] = useState(null);
   const [dateDetails, setDateDetails] = useState(null);
 
@@ -61,9 +64,10 @@ const AdminDashboard = () => {
   const [coffeeInteractions, setCoffeeInteractions] = useState([]);
   const [mutualMatches, setMutualMatches] = useState([]);
 
+  // Constants
   const defaultProfilePhoto = 'https://firebasestorage.googleapis.com/v0/b/onioncoffee-c5fb9.appspot.com/o/default%2Fdefault-avatar.png?alt=media';
 
-  // Generate random distance for demo purposes
+  // Utility Functions
   const getRandomDistance = () => Math.floor(Math.random() * 11 + 1);
 
   // Admin Status Check
@@ -73,6 +77,49 @@ const AdminDashboard = () => {
       return;
     }
   }, [isAdmin, navigate]);
+
+  // Add these function declarations
+  const fetchAllUsers = async () => {
+    try {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const usersList = usersSnapshot.docs.map((doc) => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      setAllUsers(usersList);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError('Failed to load users');
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'groups'));
+      const groupList = querySnapshot.docs.map((doc) => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      setGroups(groupList);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+      setError('Failed to load groups');
+    }
+  };
+
+  const fetchCoffeeInteractions = async () => {
+    try {
+      const interactionsSnapshot = await getDocs(collection(db, 'coffeeInteractions'));
+      const interactionsList = interactionsSnapshot.docs.map((doc) => doc.data());
+      setCoffeeInteractions(interactionsList);
+
+      const mutualMatchesList = findMutualMatches(interactionsList);
+      setMutualMatches(mutualMatchesList);
+    } catch (error) {
+      console.error('Error fetching coffee interactions:', error);
+      setError('Failed to load coffee interactions');
+    }
+  };
 
   // Fetch potential matches for user view
   const fetchProfiles = useCallback(async () => {
@@ -98,20 +145,26 @@ const AdminDashboard = () => {
       console.error('Error fetching profiles:', error);
       setError('Failed to load profiles. Please refresh.');
     }
-  }, [currentUser, fetchCoffeeInteractions]); // Add `fetchCoffeeInteractions` to dependencies  
+  }, [currentUser]);
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {
     if (!currentUser) return;
   
     try {
+      setLoading(true);
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) throw new Error('User profile not found');
-  
+      
+      if (!userDoc.exists()) {
+        setError('User profile not found');
+        return;
+      }
+
       const userData = userDoc.data();
       setUser({ id: currentUser.uid, ...userData });
-      setProfileData({
+      setProfileData(prevData => ({
+        ...prevData,
         firstName: userData.firstName || 'User',
         phoneNumber: userData.phoneNumber,
         age: userData.age || '25',
@@ -121,18 +174,19 @@ const AdminDashboard = () => {
         gender: userData.gender || '',
         interestedIn: userData.interestedIn || '',
         bio: userData.bio || ''
-      });
-  
+      }));
+
       // Fetch date details
       const dateDocRef = doc(db, 'dates', currentUser.uid);
       const dateDoc = await getDoc(dateDocRef);
       if (dateDoc.exists()) {
         setDateDetails(dateDoc.data());
       }
-  
+
       // Conditionally fetch admin data based on mainView state
       if (mainView === 'admin') {
-        await Promise.all([fetchAllUsers(), fetchGroups(), fetchCoffeeInteractions()]);
+        await Promise.all([fetchAllUsers(), fetchGroups()]);
+        await fetchCoffeeInteractions();
       } else if (mainView === 'user') {
         await fetchProfiles();
       }
@@ -142,18 +196,13 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, navigate, mainView, fetchProfiles]);
+  }, [currentUser, mainView, fetchProfiles]);
 
   useEffect(() => {
     if (currentUser) fetchUserData();
   }, [currentUser, fetchUserData]);
 
-  // Profile Update Handlers
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData(prev => ({ ...prev, [name]: value }));
-  };
-
+  // Added input handlers
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/') && file.size <= 5000000) {
@@ -164,6 +213,12 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Profile Update Handlers
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -234,19 +289,16 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Update coffee emojis if in group view
       if (coffeeEmojis.length > 0) {
         const updatedCoffeeEmojis = [...coffeeEmojis];
         updatedCoffeeEmojis[index] = true;
         setCoffeeEmojis(updatedCoffeeEmojis);
       }
 
-      // Update target user's coffee list
       await updateDoc(doc(db, 'users', userId), {
         coffeeAdded: [...coffeeAdded, user.phoneNumber]
       });
 
-      // Record interaction
       await addDoc(collection(db, 'coffeeInteractions'), {
         sender: user.phoneNumber,
         receiver: targetUserData.phoneNumber,
@@ -255,7 +307,6 @@ const AdminDashboard = () => {
 
       setFeedbackMessage('Coffee sent successfully!');
       
-      // If in discovery view, move to next profile
       if (activeView === 'discover') {
         setTimeout(() => setCurrentProfileIndex(prev => prev + 1), 1500);
       }
@@ -267,6 +318,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Modal Control Functions
   const openConfirmModal = (userId, index) => {
     setConfirmModal({ visible: true, userId, index });
   };
@@ -275,213 +327,7 @@ const AdminDashboard = () => {
     setConfirmModal({ visible: false, userId: null, index: null });
   };
 
-  // Admin Functions
-  const fetchCoffeeInteractions = useCallback(async () => {
-    try {
-      const interactionsSnapshot = await getDocs(collection(db, 'coffeeInteractions'));
-      const interactionsList = interactionsSnapshot.docs.map((doc) => doc.data());
-      setCoffeeInteractions(interactionsList);
-
-      const mutualMatchesList = findMutualMatches(interactionsList);
-      setMutualMatches(mutualMatchesList);
-    } catch (error) {
-      console.error('Error fetching coffee interactions:', error);
-      setError('Failed to load coffee interactions');
-    }
-  }, []);
-
-  const fetchGroups = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'groups'));
-      const groupList = querySnapshot.docs.map((doc) => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-      setGroups(groupList);
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-      setError('Failed to load groups');
-    }
-  };
-
-  const fetchAllUsers = async () => {
-    try {
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      const usersList = usersSnapshot.docs.map((doc) => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-      setAllUsers(usersList);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setError('Failed to load users');
-    }
-  };
-
-  const findMutualMatches = (interactions) => {
-    const matches = [];
-    const sentByUser = {};
-
-    interactions.forEach((interaction) => {
-      const { sender, receiver } = interaction;
-      if (!sentByUser[sender]) {
-        sentByUser[sender] = [];
-      }
-      sentByUser[sender].push(receiver);
-    });
-
-    for (let sender in sentByUser) {
-      sentByUser[sender].forEach((receiver) => {
-        if (sentByUser[receiver] && sentByUser[receiver].includes(sender)) {
-          matches.push({ user1: sender, user2: receiver });
-        }
-      });
-    }
-
-    return matches;
-  };
-
-  // Group Management Functions
-  const createGroup = async () => {
-    if (!groupName) return;
-    try {
-      setError(null);
-      const groupRef = await addDoc(collection(db, 'groups'), { 
-        name: groupName,
-        createdBy: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-      setGroups([...groups, { id: groupRef.id, name: groupName }]);
-      setGroupName('');
-    } catch (error) {
-      console.error('Error creating group:', error);
-      setError('Failed to create group');
-    }
-  };
-
-  const handleGroupSelect = async (groupId) => {
-    if (!groupId) return;
-    setSelectedGroupId(groupId);
-    try {
-      const q = query(
-        collection(db, 'users'), 
-        where('groupIds', 'array-contains', groupId)
-      );
-      const querySnapshot = await getDocs(q);
-      const usersInGroup = querySnapshot.docs.map((doc) => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-      setGroupUsers(usersInGroup);
-    } catch (error) {
-      console.error('Error fetching users in group:', error);
-      setError('Failed to load group users');
-    }
-  };
-
-  const addUserToGroup = async (userId, groupId) => {
-    if (!userId || !groupId) return;
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.groupIds?.includes(groupId)) {
-          setError('User is already in this group');
-          return;
-        }
-        const updatedGroupIds = userData.groupIds ? 
-          [...userData.groupIds, groupId] : [groupId];
-        
-        await updateDoc(userDocRef, { 
-          groupIds: updatedGroupIds,
-          lastUpdated: serverTimestamp()
-        });
-        
-        await fetchAllUsers();
-        await handleGroupSelect(selectedGroupId);
-        setError(null);
-      }
-    } catch (error) {
-      console.error('Error adding user to group:', error);
-      setError('Failed to add user to group');
-    }
-  };
-
-  const removeUserFromGroup = async (userId, groupId) => {
-    if (!userId || !groupId) return;
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const updatedGroupIds = userData.groupIds.filter(id => id !== groupId);
-        await updateDoc(userDocRef, { 
-          groupIds: updatedGroupIds,
-          lastUpdated: serverTimestamp()
-        });
-        await fetchAllUsers();
-        await handleGroupSelect(selectedGroupId);
-        setError(null);
-      }
-    } catch (error) {
-      console.error('Error removing user from group:', error);
-      setError('Failed to remove user from group');
-    }
-  };
-
-  const deleteGroup = async (groupId) => {
-    if (!groupId) return;
-    try {
-      await deleteDoc(doc(db, 'groups', groupId));
-      setGroups(groups.filter((group) => group.id !== groupId));
-      setSelectedGroupId('');
-      setGroupUsers([]);
-      setError(null);
-    } catch (error) {
-      console.error('Error deleting group:', error);
-      setError('Failed to delete group');
-    }
-  };
-
-  const addNewUser = async () => {
-    if (!newUserName || !newUserPhone) {
-      setError('Please provide both name and phone number');
-      return;
-    }
-    
-    try {
-      const formattedPhone = newUserPhone.startsWith('+') ? 
-        newUserPhone : `+1${newUserPhone}`;
-      
-      const userRef = await addDoc(collection(db, 'users'), {
-        firstName: newUserName,
-        phoneNumber: formattedPhone,
-        groupIds: [],
-        coffeeAdded: [],
-        photos: [defaultProfilePhoto],
-        profilePhoto: defaultProfilePhoto,
-        createdAt: serverTimestamp(),
-        lastUpdated: serverTimestamp()
-      });
-      
-      setAllUsers([...allUsers, { 
-        id: userRef.id, 
-        firstName: newUserName, 
-        phoneNumber: formattedPhone 
-      }]);
-      
-      setNewUserName('');
-      setNewUserPhone('');
-      setError(null);
-      setFeedbackMessage('User added successfully');
-      setTimeout(() => setFeedbackMessage(''), 3000);
-    } catch (error) {
-      console.error('Error adding user:', error);
-      setError('Failed to add new user');
-    }
-  };
-
+  // Logout Handler
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -549,14 +395,14 @@ const AdminDashboard = () => {
   const renderProfileView = () => (
     <div className="profile-view">
       <PhotoCarousel 
-        photos={profileData.photos} 
+        photos={profileData.photos || [profileData.profilePhoto || defaultProfilePhoto]} 
         altText="Your profile"
       />
       <div className="profile-info">
-        <h2>{profileData.firstName}</h2>
-        <p>Age: {profileData.age}</p>
-        <p>Gender: {profileData.gender}</p>
-        <p>Interested In: {profileData.interestedIn}</p>
+        <h2>{profileData.firstName || 'User'}</h2>
+        <p>Age: {profileData.age || 'Not specified'}</p>
+        <p>Gender: {profileData.gender || 'Not specified'}</p>
+        <p>Interested In: {profileData.interestedIn || 'Not specified'}</p>
         
         <form onSubmit={handleProfileUpdate} className="profile-form">
           <div className="form-group">
@@ -573,7 +419,7 @@ const AdminDashboard = () => {
             <label>Bio</label>
             <textarea
               name="bio"
-              value={profileData.bio}
+              value={profileData.bio || ''}
               onChange={handleInputChange}
               placeholder="Tell others about yourself..."
               maxLength={500}
@@ -588,12 +434,12 @@ const AdminDashboard = () => {
     </div>
   );
 
-  // Render Admin View
+  // Render Admin Dashboard
   const renderAdminDashboard = () => (
     <div className="admin-dashboard">
       <div className="admin-header">
         <h1>Admin Dashboard</h1>
-        <p>Welcome, {profileData.firstName}</p>
+        <p>Welcome, {profileData.firstName || 'Admin'}</p>
       </div>
 
       <div className="admin-sections">
@@ -611,17 +457,19 @@ const AdminDashboard = () => {
               />
               <button 
                 onClick={createGroup}
-                disabled={!groupName}
+                disabled={!groupName || loading}
                 className="admin-button"
               >
-                Create Group
+                {loading ? 'Creating...' : 'Create Group'}
               </button>
             </div>
 
             <div className="group-selection">
               <select 
                 onChange={(e) => handleGroupSelect(e.target.value)}
+                value={selectedGroupId}
                 className="admin-select"
+                disabled={loading}
               >
                 <option value="">Select a group</option>
                 {groups.map(group => (
@@ -642,6 +490,7 @@ const AdminDashboard = () => {
                       <button 
                         onClick={() => removeUserFromGroup(user.id, selectedGroupId)}
                         className="admin-button-danger"
+                        disabled={loading}
                       >
                         Remove
                       </button>
@@ -655,6 +504,7 @@ const AdminDashboard = () => {
                     }
                   }}
                   className="admin-button-danger"
+                  disabled={loading}
                 >
                   Delete Group
                 </button>
@@ -674,6 +524,7 @@ const AdminDashboard = () => {
                 onChange={(e) => setNewUserName(e.target.value)}
                 placeholder="Name"
                 className="admin-input"
+                disabled={loading}
               />
               <input
                 type="text"
@@ -681,13 +532,14 @@ const AdminDashboard = () => {
                 onChange={(e) => setNewUserPhone(e.target.value)}
                 placeholder="Phone (+1xxxxxxxxxx)"
                 className="admin-input"
+                disabled={loading}
               />
               <button 
                 onClick={addNewUser}
-                disabled={!newUserName || !newUserPhone}
+                disabled={!newUserName || !newUserPhone || loading}
                 className="admin-button"
               >
-                Add User
+                {loading ? 'Adding...' : 'Add User'}
               </button>
             </div>
 
@@ -710,6 +562,7 @@ const AdminDashboard = () => {
                           value={user.groupIds?.[0] || ''}
                           onChange={(e) => addUserToGroup(user.id, e.target.value)}
                           className="admin-select"
+                          disabled={loading}
                         >
                           <option value="">Select Group</option>
                           {groups.map(group => (
@@ -799,6 +652,7 @@ const AdminDashboard = () => {
         <button 
           onClick={() => setActiveView('discover')} 
           className={`nav-item ${activeView === 'discover' ? 'active' : ''}`}
+          disabled={loading}
         >
           <Coffee className="nav-icon" />
           <span>Discover</span>
@@ -806,6 +660,7 @@ const AdminDashboard = () => {
         <button 
           onClick={() => setActiveView('dates')} 
           className={`nav-item ${activeView === 'dates' ? 'active' : ''}`}
+          disabled={loading}
         >
           <Calendar className="nav-icon" />
           <span>Dates</span>
@@ -813,6 +668,7 @@ const AdminDashboard = () => {
         <button 
           onClick={() => setActiveView('profile')} 
           className={`nav-item ${activeView === 'profile' ? 'active' : ''}`}
+          disabled={loading}
         >
           <User className="nav-icon" />
           <span>Profile</span>
@@ -821,6 +677,7 @@ const AdminDashboard = () => {
     </div>
   );
 
+  // Main Render Method
   if (!isAdmin) {
     return <div className="access-denied">Access Denied</div>;
   }
@@ -830,69 +687,80 @@ const AdminDashboard = () => {
   }
   
   return (
-    <div className="admin-container">
-      {/* Error and Success Messages */}
-      {error && (
-        <div className="error-message" onClick={() => setError(null)}>
-          {error}
+    <ErrorBoundary>
+      <div className="admin-container">
+        {/* Error and Success Messages */}
+        {error && (
+          <div className="error-message" onClick={() => setError(null)}>
+            {error}
+          </div>
+        )}
+        
+        {(updateSuccess || feedbackMessage) && (
+          <div className="feedback-message">
+            {feedbackMessage}
+          </div>
+        )}
+    
+        {/* View Toggle */}
+        <div className="view-toggle">
+          <button
+            onClick={() => setMainView('admin')}
+            className={`toggle-btn ${mainView === 'admin' ? 'active' : ''}`}
+            disabled={loading}
+          >
+            Admin Dashboard
+          </button>
+          <button
+            onClick={() => setMainView('user')}
+            className={`toggle-btn ${mainView === 'user' ? 'active' : ''}`}
+            disabled={loading}
+          >
+            User Dashboard
+          </button>
         </div>
-      )}
-      
-      {(updateSuccess || feedbackMessage) && (
-        <div className="feedback-message">
-          {feedbackMessage}
+    
+        {/* Main Content */}
+        <div className="main-content">
+          {mainView === 'admin' ? renderAdminDashboard() : renderUserDashboard()}
         </div>
-      )}
-  
-      {/* View Toggle */}
-      <div className="view-toggle">
-        <button
-          onClick={() => setMainView('admin')}
-          className={`toggle-btn ${mainView === 'admin' ? 'active' : ''}`}
+
+        {/* Coffee Confirmation Modal */}
+        {confirmModal.visible && (
+          <div className="confirm-modal">
+            <div className="confirm-content">
+              <h3>Send coffee to this person?</h3>
+              <div className="confirm-buttons">
+                <button 
+                  onClick={handleConfirmCoffee} 
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? 'Sending...' : 'Yes, Send Coffee ☕'}
+                </button>
+                <button 
+                  onClick={closeConfirmModal} 
+                  className="btn btn-secondary"
+                  disabled={loading}
+                >
+                  No, Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Logout Button */}
+        <button 
+          onClick={handleLogout} 
+          className="logout-button"
+          aria-label="Logout"
+          disabled={loading}
         >
-          Admin Dashboard
-        </button>
-        <button
-          onClick={() => setMainView('user')}
-          className={`toggle-btn ${mainView === 'user' ? 'active' : ''}`}
-        >
-          User Dashboard
+          Logout
         </button>
       </div>
-  
-      {/* Main Content */}
-      
-      {/* Main Content */}
-<ErrorBoundary>
-  {mainView === 'admin' ? renderAdminDashboard() : renderUserDashboard()}
-</ErrorBoundary>
-
-{/* Coffee Confirmation Modal */}
-{confirmModal.visible && (
-  <div className="confirm-modal">
-    <div className="confirm-content">
-      <h3>Send coffee to this person?</h3>
-      <div className="confirm-buttons">
-        <button onClick={handleConfirmCoffee} className="btn btn-primary">
-          Yes, Send Coffee ☕
-        </button>
-        <button onClick={closeConfirmModal} className="btn btn-secondary">
-          No, Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-/* Logout Button */
-<button 
-  onClick={handleLogout} 
-  className="logout-button"
-  aria-label="Logout"
->
-  Logout
-</button>
-    </div>
+    </ErrorBoundary>
   );
 };
 

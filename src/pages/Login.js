@@ -15,18 +15,25 @@ const Login = () => {
 
   const setupRecaptcha = () => {
     if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          console.log('Captcha Resolved');
-        },
-        'expired-callback': () => {
-          setError('reCAPTCHA expired. Please try again.');
-          setLoading(false);
-        }
-      }, auth);
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+          size: 'invisible',
+          callback: () => {
+            console.log('Captcha Resolved');
+          },
+          'expired-callback': () => {
+            setError('reCAPTCHA expired. Please try again.');
+            setLoading(false);
+            window.recaptchaVerifier = null;
+          }
+        }, auth);
+      } catch (error) {
+        console.error('RecaptchaVerifier setup error:', error);
+        setError('Failed to set up verification. Please refresh and try again.');
+        setLoading(false);
+      }
     }
-};
+  };
 
   const formatPhoneNumber = (number) => {
     const cleaned = number.replace(/\D/g, '');
@@ -46,6 +53,11 @@ const Login = () => {
 
     try {
       setupRecaptcha();
+      
+      if (!window.recaptchaVerifier) {
+        throw new Error('Failed to initialize reCAPTCHA');
+      }
+
       const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
       console.log('Attempting to send code to:', formattedPhoneNumber);
       
@@ -148,9 +160,10 @@ const Login = () => {
             onChange={(e) => setPhoneNumber(e.target.value)}
             placeholder="Enter phone number (e.g., 7194914511)"
             className="input-field"
+            disabled={loading}
             required
           />
-          <div id="recaptcha-container"></div>  {/* Add this line */}
+          <div id="recaptcha-container"></div>
           <button 
             type="submit" 
             className="submit-button" 
@@ -167,6 +180,7 @@ const Login = () => {
             onChange={(e) => setVerificationCode(e.target.value)}
             placeholder="Enter verification code"
             className="input-field"
+            disabled={loading}
             required
           />
           <button 
