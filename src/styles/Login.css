@@ -1,0 +1,57 @@
+.login-container {
+  max-width: 450px;
+  margin: 100px auto;
+  padding: 30px;
+  background-color: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.4s ease-in-out;
+  text-align: center; /* Center everything */
+}
+
+.login-title {
+  color: #2B6CB0;
+  margin-bottom: 20px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+}
+
+.profile-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 20px auto; /* Center photo */
+  border: 3px solid #63B3ED;
+}
+
+.input-field {
+  border: 2px solid #E2E8F0;
+  padding: 12px;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 20px;
+  transition: border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+}
+
+.input-field:focus {
+  border-color: #63B3ED;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+.submit-button {
+  width: 100%;
+  background: linear-gradient(145deg, #2B6CB0, #63B3ED);
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+  font-size: 1.2rem;
+}
+
+.submit-button:hover {
+  background-color: #63B3ED;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}

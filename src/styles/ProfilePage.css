@@ -1,0 +1,82 @@
+.profile-page-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  height: calc(100vh - 140px); /* Account for bottom nav */
+  overflow-y: auto;
+}
+
+.profile-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.profile-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 20px;
+  color: #ffffff;
+}
+
+.profile-name-age {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.profile-distance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.profile-bio {
+  padding: 16px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.action-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pass-button {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.pass-button:hover {
+  background-color: #e5e7eb;
+}
+
+.peel-button {
+  background: linear-gradient(to right, #7c3aed, #6d28d9);
+  color: #ffffff;
+}
+
+.peel-button:hover {
+  opacity: 0.95;
+}
