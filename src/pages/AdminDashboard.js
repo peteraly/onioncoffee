@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { auth, db, storage } from '../firebase/config';
-import { doc, getDoc, setDoc, collection, query, where, getDocs, updateDoc, addDoc, deleteDoc, serverTimestamp, limit } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc, deleteDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Coffee, Calendar, User, MapPin, X } from 'lucide-react';
@@ -78,12 +78,13 @@ const AdminDashboard = () => {
   const fetchProfiles = useCallback(async () => {
     try {
       const profilesRef = collection(db, 'users');
-      const profilesQuery = query(profilesRef, 
+      const profilesQuery = query(
+        profilesRef,
         where('setupComplete', '==', true),
         limit(10)
       );
       const snapshot = await getDocs(profilesQuery);
-      
+  
       const profileList = snapshot.docs
         .map(doc => ({
           id: doc.id,
@@ -91,13 +92,13 @@ const AdminDashboard = () => {
           distance: getRandomDistance()
         }))
         .filter(profile => profile.id !== currentUser?.uid);
-
+  
       setProfiles(profileList);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       setError('Failed to load profiles. Please refresh.');
     }
-  }, [currentUser]);
+  }, [currentUser, fetchCoffeeInteractions]); // Add `fetchCoffeeInteractions` to dependencies  
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {

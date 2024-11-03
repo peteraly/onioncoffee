@@ -9,7 +9,6 @@ import PhotoCarousel from '../components/PhotoCarousel';
 import DateDetails from './setup/DateDetails';
 import defaultProfilePhoto from '../assets/defaultProfilePhoto.jpg';
 import '../styles/App.css';
-import ErrorBoundary from '../components/ErrorBoundary';
 
 const Dashboard = () => {
   const { setupComplete, currentUser } = useAuth();
