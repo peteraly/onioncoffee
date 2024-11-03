@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from "../../lib/utils";
+import { cn } from "../lib/utils"; // Ensure the correct path for `cn`
 
 const PhotoCarousel = ({ 
   photos = [], 
@@ -20,7 +20,7 @@ const PhotoCarousel = ({
     setCurrentIndex(prev => (prev === photos.length - 1 ? 0 : prev + 1));
   }, [photos.length]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoPlay && photos.length > 1) {
       const timer = setInterval(handleNext, interval);
       return () => clearInterval(timer);
