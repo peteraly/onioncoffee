@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from "../lib/utils"; // Ensure the correct path for `cn`
+import { cn } from "../utils/utils"; // Ensure the correct path for `cn`
 
 const PhotoCarousel = ({ 
   photos = [], 
