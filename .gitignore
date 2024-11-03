@@ -1,11 +1,12 @@
+cat > .gitignore << EOL
 # Dependencies
 /node_modules
 
 # Production build
 /build
 
-# Misc
-.DS_Store
+# Environment files
+.env
 .env.local
 .env.development.local
 .env.test.local
@@ -16,9 +17,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Firebase config (optional, depending on your security needs)
-# src/firebase/config.js
-
 # Editor directories and files
 .idea
 .vscode
@@ -26,58 +24,8 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
-```
+.DS_Store
 
-5. Add all your files to Git:
-
-```bash
-git add .
-```
-
-6. Commit your files:
-
-```bash
-git commit -m "Initial commit"
-```
-
-7. Link your local repository to the GitHub repository:
-
-```bash
-git remote add origin https://github.com/peteraly/onioncoffee.git
-```
-
-8. Push your code to GitHub:
-
-```bash
-git branch -M main
-git push -u origin main
-```
-
-9. If you haven't already, create a README.md file:
-
-<antArtifact identifier="readme" type="application/vnd.ant.code" language="markdown" title="README.md">
-# Onion Coffee
-
-Onion Coffee is a web application that allows users to register and login using their phone number. It's built with React and Firebase.
-
-## Features
-
-- Phone number authentication
-- User registration with name and age
-- User dashboard
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies with `npm install`
-3. Set up a Firebase project and update the configuration in `src/firebase/config.js`
-4. Run the development server with `npm start`
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
-
+# Firebase cache
+.firebase/
+EOL
