@@ -1,44 +1,30 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAnalytics } from 'firebase/analytics';
+// firebase/config.js
 
-// Firebase configuration
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';  // Import Firebase Storage
+
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAIphKgh86eLCsl-Y4xZ6XeJJ4opmW4ijI",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "onioncoffee-c5fb9.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "onioncoffee-c5fb9",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "onioncoffee-c5fb9.appspot.com",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "503205175895",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:503205175895:web:a058fff71cf50faaae3912",
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-GK5V0SEZNR"
+  apiKey: "AIzaSyAIphKgh86eLCsl-Y4xZ6XeJJ4opmW4ijI",
+  authDomain: "onioncoffee-c5fb9.firebaseapp.com",
+  projectId: "onioncoffee-c5fb9",
+  storageBucket: "onioncoffee-c5fb9.appspot.com",
+  messagingSenderId: "503205175895",
+  appId: "1:503205175895:web:a058fff71cf50faaae3912",
+  measurementId: "G-GK5V0SEZNR"
 };
 
 // Initialize Firebase
-let app;
-try {
-  app = initializeApp(firebaseConfig);
-} catch (error) {
-  console.error("Firebase initialization error:", error);
-}
+const app = initializeApp(firebaseConfig);
 
-// Initialize services with error handling
-let auth, db, storage, analytics;
+// Initialize Firebase Auth
+const auth = getAuth(app);
 
-try {
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  analytics = getAnalytics(app);
+// Initialize Firestore
+const db = getFirestore(app);
 
-  // Set auth persistence
-  setPersistence(auth, browserLocalPersistence)
-    .catch((error) => {
-      console.error("Auth persistence error:", error);
-    });
-} catch (error) {
-  console.error("Service initialization error:", error);
-}
+// Initialize Firebase Storage
+const storage = getStorage(app);  // Initialize Firebase Storage
 
-export { app, auth, db, storage, analytics };
+export { auth, db, storage };  // Export storage along with auth and db

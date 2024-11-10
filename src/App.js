@@ -22,23 +22,20 @@ function App() {
         <div className="App">
           <Header />
           <Routes>
-            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/about" element={<About />} />
-
-            {/* Protected Route for Profile Setup */}
+            
             <Route
-              path="/setup"
+              path="/setup-profile"
               element={
                 <ProtectedRoute>
                   <ProfileSetup />
                 </ProtectedRoute>
               }
             />
-
-            {/* Protected Route for User Dashboard */}
+            
             <Route
               path="/dashboard"
               element={
@@ -47,8 +44,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Admin-Only Route for Admin Dashboard */}
+            
             <Route
               path="/admin-dashboard"
               element={
@@ -57,8 +53,7 @@ function App() {
                 </AdminRoute>
               }
             />
-
-            {/* Catch-All Route for 404 - Should remain last */}
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />

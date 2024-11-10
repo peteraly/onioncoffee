@@ -1,57 +1,30 @@
-.login-container {
-  max-width: 450px;
-  margin: 100px auto;
-  padding: 30px;
-  background-color: #FFFFFF;
-  border-radius: 10px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.4s ease-in-out;
-  text-align: center; /* Center everything */
+/* Add to your existing Login.css */
+.test-credentials {
+  background-color: #e8f5e9;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  text-align: center;
 }
 
-.login-title {
-  color: #2B6CB0;
-  margin-bottom: 20px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: bold;
+.test-credentials p {
+  margin: 5px 0;
+  color: #2e7d32;
+  font-size: 14px;
 }
 
-.profile-photo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin: 0 auto 20px auto; /* Center photo */
-  border: 3px solid #63B3ED;
-}
-
-.input-field {
-  border: 2px solid #E2E8F0;
-  padding: 12px;
-  border-radius: 6px;
-  width: 100%;
-  margin-bottom: 20px;
-  transition: border-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
-}
-
-.input-field:focus {
-  border-color: #63B3ED;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  outline: none;
-}
-
-.submit-button {
-  width: 100%;
-  background: linear-gradient(145deg, #2B6CB0, #63B3ED);
-  color: white;
-  padding: 14px;
+.back-button {
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 10px 20px;
   border: none;
-  border-radius: 8px;
-  transition: background-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
-  font-size: 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 14px;
 }
 
-.submit-button:hover {
-  background-color: #63B3ED;
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+.back-button:hover {
+  background-color: #e0e0e0;
 }

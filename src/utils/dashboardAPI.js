@@ -1,115 +1,10 @@
-// AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db, storage } from '../firebase/config';
+import { db, storage } from '../firebase/config';
 import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut 
-} from 'firebase/auth';
-import { 
-  doc, 
-  getDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
-  addDoc, 
-  serverTimestamp, 
-  limit 
+  doc, getDoc, collection, query, where, getDocs,
+  updateDoc, addDoc, serverTimestamp, limit 
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// Create AuthContext
-const AuthContext = createContext();
-
-// Custom hook to use AuthContext
-export const useAuth = () => useContext(AuthContext);
-
-// AuthProvider component
-export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [setupComplete, setSetupComplete] = useState(false);
-  const [isTestUser, setIsTestUser] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  // Signup function
-  const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
-
-  // Login function
-  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-
-  // Logout function
-  const logout = () => signOut(auth);
-
-  // Listen for auth state changes and set `setupComplete`, `isTestUser`, and `isAdmin`
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setSetupComplete(userData.setupComplete || false);
-            setIsTestUser(userData.isTestUser || false);
-            setIsAdmin(userData.isAdmin || false);
-            console.log('AuthContext - User data:', userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user setup status:', error);
-        }
-      } else {
-        // Reset states if no user
-        setSetupComplete(false);
-        setIsTestUser(false);
-        setIsAdmin(false);
-        console.log('AuthContext - No user authenticated');
-      }
-    });
-
-    return unsubscribe;
-  }, []);
-
-  // Debugging console logs for each state to trace conditional routing
-  useEffect(() => {
-    console.log("AuthContext Debug:", {
-      currentUser,
-      setupComplete,
-      isTestUser,
-      isAdmin,
-      loading,
-    });
-  }, [currentUser, setupComplete, isTestUser, isAdmin, loading]);
-
-  // Context value
-  const value = {
-    currentUser,
-    login,
-    signup,
-    logout,
-    setupComplete,
-    isTestUser,
-    isAdmin,
-    setIsTestUser,
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
-};
-
-// DashboardAPI for Firestore and Storage interactions
 export const DashboardAPI = {
   async fetchUser(userId) {
     try {
@@ -180,7 +75,7 @@ export const DashboardAPI = {
     try {
       const receiverRef = doc(db, 'users', receiverId);
       const receiverDoc = await getDoc(receiverRef);
-
+      
       if (!receiverDoc.exists()) {
         throw new Error('Receiver not found');
       }
