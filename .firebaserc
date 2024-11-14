@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "onioncoffee-c5fb9"
-  }
+    "default": "onioncoffee-c5fb9",
+    "staging": "onioncoffee-c5fb9"
+  },
+  "targets": {},
+  "etags": {}
 }

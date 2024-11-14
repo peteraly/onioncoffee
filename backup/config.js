@@ -19,36 +19,31 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Disable app verification when testing locally
-if (window.location.hostname === 'localhost') {
-  auth.settings.appVerificationDisabledForTesting = true;
-}
-
 const initializeEmulators = async () => {
   if (window.location.hostname === 'localhost') {
     try {
-      console.log('Connecting to Firebase emulators...');
-      connectAuthEmulator(auth, 'http://localhost:9098', { disableWarnings: true });
-      connectFirestoreEmulator(db, 'localhost', 8081);
-      connectStorageEmulator(storage, 'localhost', 9198);
-
-      try {
-        await enableIndexedDbPersistence(db);
-      } catch (err) {
-        if (err.code === 'failed-precondition') {
-          console.warn('Persistence can only be enabled in one tab at a time.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('The browser does not support persistence.');
-        }
-      }
-
-      console.log('Connected to all emulators');
+      console.log('Setting up Firebase emulators...');
+      
+      // Connect to Auth emulator
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      
+      // Connect to Firestore emulator
+      connectFirestoreEmulator(db, '127.0.0.1', 8080);
+      
+      // Connect to Storage emulator
+      connectStorageEmulator(storage, '127.0.0.1', 9199);
+      
+      // Enable offline persistence
+      await enableIndexedDbPersistence(db);
+      
+      console.log('Successfully connected to all emulators');
     } catch (error) {
-      console.error('Error connecting to emulators:', error);
+      console.error('Error initializing emulators:', error);
     }
   }
 };
 
+// Initialize emulators
 initializeEmulators();
 
 export { auth, db, storage };

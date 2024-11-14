@@ -26,7 +26,12 @@
     "deploy": "npm run build && firebase deploy",
     "lint": "eslint src/**/*.{js,jsx}",
     "lint:fix": "eslint src/**/*.{js,jsx} --fix",
-    "format": "prettier --write src/**/*.{js,jsx,css,md}"
+    "format": "prettier --write src/**/*.{js,jsx,css,md}",
+    "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
+    "dev": "firebase emulators:start & react-scripts start",
+    "dev:win": "start firebase emulators:start && react-scripts start",
+    "seed": "node scripts/seedTestData.js",
+    "clean": "rimraf build .firebase database-debug.log firebase-debug.log ui-debug.log"
   },
   "eslintConfig": {
     "extends": [
@@ -49,10 +54,14 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@eslint/js": "^9.14.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.2",
+    "firebase-tools": "^13.25.0",
     "globals": "^15.12.0",
     "jest": "^27.5.1",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "rimraf": "^5.0.10"
   }
 }

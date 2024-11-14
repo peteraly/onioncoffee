@@ -1,10 +1,54 @@
 rules_version = '2';
-
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size <= 5 * 1024 * 1024; // 5MB limit
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Profile photos
+    match /profilePhotos/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && isOwner(userId)
+        && isValidImage();
+    }
+
+    // User files
+    match /userFiles/{userId}/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() 
+        && isOwner(userId)
+        && isValidImage();
+    }
+
+    // Public assets
+    match /public/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Test user specific rules
+    match /test/{fileName} {
+      allow read, write: if request.auth.uid == 'test-user-id' ||
+                          request.auth.token.phone_number == '+15551234567';
+    }
+
+    // Default deny
     match /{allPaths=**} {
       allow read, write: if false;
     }
